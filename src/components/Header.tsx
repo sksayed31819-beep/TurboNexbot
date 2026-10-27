@@ -1,10 +1,10 @@
 import React from 'react';
-import { Shield, Lock, Terminal, Radio, Send, CheckCircle2 } from 'lucide-react';
+import { Shield, Lock, Terminal, Radio, Send, CheckCircle2, Globe, Cpu } from 'lucide-react';
 
 interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  pythonTestPassed: boolean | null;
+  unitTestsPassed: boolean | null;
   onRunTests: () => void;
   isRunningTests: boolean;
 }
@@ -12,16 +12,17 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
-  pythonTestPassed,
+  unitTestsPassed,
   onRunTests,
   isRunningTests,
 }) => {
   const tabs = [
-    { id: 'simulator', label: 'Telegram Simulator', icon: Radio },
+    { id: 'webhook', label: 'Webhook Gateway', icon: Globe },
+    { id: 'simulator', label: 'Group Simulator', icon: Radio },
     { id: 'lab', label: 'Filter Testing Lab', icon: Terminal },
-    { id: 'scheduler', label: 'Channel Scheduler', icon: Send },
-    { id: 'settings', label: 'Admin Settings', icon: Lock },
-    { id: 'deploy', label: 'Python Code & Free Deploy', icon: Shield },
+    { id: 'scheduler', label: 'Channel Scheduler (D1)', icon: Send },
+    { id: 'settings', label: 'Admin Settings (D1)', icon: Lock },
+    { id: 'deploy', label: 'Cloudflare Worker Code & Deploy', icon: Shield },
   ];
 
   return (
@@ -38,11 +39,11 @@ export const Header: React.FC<HeaderProps> = ({
               <div className="flex items-center space-x-2">
                 <span className="font-bold text-lg text-white tracking-tight">TurboNex</span>
                 <span className="px-1.5 py-0.5 text-xs font-semibold uppercase tracking-wider rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-                  Bot Core v1.0
+                  Cloudflare Worker Free
                 </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
-                Secure Telegram Community Moderation &amp; Channel Scheduler
+                Serverless Telegram Moderation &amp; D1 Channel Scheduler
               </p>
             </div>
           </div>
@@ -55,11 +56,11 @@ export const Header: React.FC<HeaderProps> = ({
               className={`flex items-center space-x-2 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
                 isRunningTests
                   ? 'bg-slate-800 text-slate-400 border-slate-700 animate-pulse'
-                  : pythonTestPassed === true
+                  : unitTestsPassed === true
                   ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
                   : 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/20'
               }`}
-              title="Run Python and TypeScript test suites"
+              title="Run Automated TypeScript & Cloudflare Worker Unit Tests"
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>{isRunningTests ? 'Running Tests...' : '26 Unit Tests Passing'}</span>

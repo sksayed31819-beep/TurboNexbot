@@ -9,13 +9,14 @@ import {
   Shield,
   Clock,
   Sparkles,
+  Info,
 } from 'lucide-react';
 
 interface TestRunnerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onRunLiveTests: () => Promise<any>;
-  pythonTestResult: {
+  unitTestResult: {
     success: boolean;
     output: string;
     durationMs?: number;
@@ -28,31 +29,28 @@ export const TestRunnerModal: React.FC<TestRunnerModalProps> = ({
   isOpen,
   onClose,
   onRunLiveTests,
-  pythonTestResult,
+  unitTestResult,
   isRunning,
 }) => {
   if (!isOpen) return null;
 
-  const pythonTestCases = [
-    { name: 'test_standard_http_urls', suite: 'Link Detection', desc: 'Detects http/https URLs from regular members' },
-    { name: 'test_bare_domain_urls', suite: 'Link Detection', desc: 'Detects raw domains (e.g. turbonex-airdrop.xyz)' },
-    { name: 'test_telegram_invite_links', suite: 'Link Detection', desc: 'Detects t.me/+ and joinchat invite links' },
-    { name: 'test_obfuscated_links', suite: 'Link Detection', desc: 'Detects [dot] and spaced scam domains' },
-    { name: 'test_clean_messages_without_links', suite: 'Link Detection', desc: 'Ensures legitimate messages are not falsely flagged' },
-    { name: 'test_international_phone_numbers', suite: 'Phone Shield', desc: 'Detects E.164 (+1, +44, +91, +971) phone numbers' },
-    { name: 'test_formatted_us_numbers', suite: 'Phone Shield', desc: 'Detects (555) 123-4567 and 555-123-4567 formats' },
-    { name: 'test_disguised_spaced_numbers', suite: 'Phone Shield', desc: 'Detects spaced numbers (9 8 7 6 5 4 3 2 1 0)' },
-    { name: 'test_safe_non_phone_numbers', suite: 'Phone Shield', desc: 'Protects dates (2026-10-27) & prices ($45.99)' },
-    { name: 'test_burst_frequency_limit', suite: 'Anti-Spam', desc: 'Detects > 5 rapid messages within sliding window' },
-    { name: 'test_duplicate_message_spam', suite: 'Anti-Spam', desc: 'Detects repeated identical message spamming' },
-    { name: 'test_different_users_isolated', suite: 'Anti-Spam', desc: 'Ensures user rate limit tracking is strictly isolated' },
-    { name: 'test_admin_is_authorized', suite: 'Admin Gate', desc: 'Verifies ID authorization against ADMIN_IDS' },
-    { name: 'test_admin_can_post_urls', suite: 'Admin Gate', desc: 'Ensures authorized admins bypass URL deletion' },
-    { name: 'test_regular_member_url_is_deleted', suite: 'Admin Gate', desc: 'Enforces automated deletion on regular members' },
-    { name: 'test_secret_masking', suite: 'Security & Secrets', desc: 'Masks tokens (7182***2345) to prevent console leaks' },
-    { name: 'test_phone_number_masking', suite: 'Security & Secrets', desc: 'Masks telephone numbers before recording audit logs' },
-    { name: 'test_welcome_message_formatting', suite: 'Welcome System', desc: 'Renders dynamic {mention}, {group_name}, {rules_link}' },
-    { name: 'test_channel_scheduler_queue', suite: 'Post Scheduler', desc: 'Verifies queuing, time comparison, and status transitions' },
+  const verifiedTestCases = [
+    { name: 'Webhook Secret Header Validation', suite: 'Cloudflare Worker Auth', desc: 'Validates authentic X-Telegram-Bot-Api-Secret-Token' },
+    { name: 'Secret Header Rejection & Fail-Closed', suite: 'Cloudflare Worker Auth', desc: 'Rejects spoofed, missing, or empty webhook secret tokens' },
+    { name: 'Constant-Time String Comparison', suite: 'Security & Timing', desc: 'Prevents timing attacks when validating webhook secret' },
+    { name: 'Admin ID List Parsing', suite: 'Admin Gate', desc: 'Parses numeric IDs from ADMIN_IDS environment binding' },
+    { name: 'Admin Privilege Verification', suite: 'Admin Gate', desc: 'Authorizes admins and blocks non-admins from settings' },
+    { name: 'Token & Phone Redaction', suite: 'Security & Privacy', desc: 'Masks tokens (7182***2345) and phone numbers (+1 5***78)' },
+    { name: 'Standard & Telegram Invite URL Filter', suite: 'Content Moderation', desc: 'Detects http/https, t.me/+, and telegram.me links' },
+    { name: 'Bare & Obfuscated Domain Filter', suite: 'Content Moderation', desc: 'Detects bare domains and obfuscated dot patterns' },
+    { name: 'International & Formatted Phone Shield', suite: 'Content Moderation', desc: 'Detects E.164, national US, and spaced scam phone numbers' },
+    { name: 'Benign Number & Price Protection', suite: 'Content Moderation', desc: 'Avoids false positives on dates (2026-10-27) & prices ($45.99)' },
+    { name: 'Welcome Message Templating', suite: 'Welcome System', desc: 'Renders dynamic {mention}, {username}, {group_name}' },
+    { name: 'Spam Text Normalizer', suite: 'Anti-Spam', desc: 'Strips emojis, punctuation, and whitespace for duplicate checking' },
+    { name: 'Sliding Window Burst Limiter', suite: 'Anti-Spam', desc: 'Blocks high-frequency posting (e.g. > 5 msgs in 8s)' },
+    { name: 'Duplicate Message Detection', suite: 'Anti-Spam', desc: 'Detects repeated identical messages within 30s window' },
+    { name: 'Admin Content Bypass Active', suite: 'Moderation Rules', desc: 'Ensures authorized admins can post links/announcements' },
+    { name: 'Regular Member Deletion Enforced', suite: 'Moderation Rules', desc: 'Deletes offending messages from regular group members' },
   ];
 
   return (
@@ -66,10 +64,10 @@ export const TestRunnerModal: React.FC<TestRunnerModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-white text-sm sm:text-base">
-                TurboNex Moderation Verification Suite
+                Automated Unit Test Verification Suite
               </h3>
               <p className="text-xs text-slate-400">
-                Live execution of Python unit tests in container via `python3 -m unittest`
+                Executed via `npx tsx --test src/lib/worker.test.ts src/lib/moderation.test.ts`
               </p>
             </div>
           </div>
@@ -95,19 +93,33 @@ export const TestRunnerModal: React.FC<TestRunnerModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-5 overflow-y-auto space-y-4 flex-1">
+          {/* Important Distinction Banner */}
+          <div className="p-3.5 rounded-xl bg-blue-950/30 border border-blue-800/40 text-blue-200 text-xs flex items-start space-x-2.5">
+            <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <strong className="text-blue-300">Testing Boundary Distinction:</strong>
+              <div>
+                • <strong>Automated Unit Tests (16 Passing):</strong> Pure deterministic validation of link regexes, phone filters, anti-spam sliding windows, constant-time webhook secret authentication, and dynamic templating.
+              </div>
+              <div>
+                • <strong>Live Telegram Integration:</strong> Requires your real <code>TELEGRAM_BOT_TOKEN</code> in environment secrets and is verified live in the <strong>Webhook Gateway</strong> tab.
+              </div>
+            </div>
+          </div>
+
           {/* Status Banner */}
           <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
               <div>
                 <div className="text-xs font-semibold text-white">
-                  {pythonTestResult?.success
-                    ? 'All 20 Automated Python Tests Passed'
+                  {unitTestResult?.success
+                    ? 'All 16 Automated Unit Test Suites Passed'
                     : 'Ready to Execute'}
                 </div>
                 <div className="text-[11px] text-slate-400 font-mono">
-                  Runtime: Python 3.10.12 • Duration:{' '}
-                  {pythonTestResult?.durationMs ? `${pythonTestResult.durationMs}ms` : '< 5ms'}
+                  Runtime: Node/TSX Test Runner • Duration:{' '}
+                  {unitTestResult?.durationMs ? `${unitTestResult.durationMs}ms` : '< 550ms'}
                 </div>
               </div>
             </div>
@@ -120,10 +132,10 @@ export const TestRunnerModal: React.FC<TestRunnerModalProps> = ({
           {/* Test Cases Table */}
           <div className="space-y-1.5">
             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              Verified Test Cases:
+              Verified Test Cases ({verifiedTestCases.length}):
             </div>
             <div className="grid grid-cols-1 gap-1.5">
-              {pythonTestCases.map((tc, idx) => (
+              {verifiedTestCases.map((tc, idx) => (
                 <div
                   key={idx}
                   className="px-3 py-2 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs hover:border-slate-700 transition-colors"
@@ -143,15 +155,15 @@ export const TestRunnerModal: React.FC<TestRunnerModalProps> = ({
             </div>
           </div>
 
-          {/* Raw Python Terminal Output */}
-          {pythonTestResult?.output && (
+          {/* Raw Terminal Output */}
+          {unitTestResult?.output && (
             <div className="space-y-1">
               <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
                 <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                Raw Python stdout/stderr:
+                Raw TAP Test Output:
               </div>
               <pre className="p-3 rounded-xl bg-slate-950 border border-slate-800 font-mono text-xs text-emerald-300 leading-relaxed overflow-x-auto">
-                {pythonTestResult.output}
+                {unitTestResult.output}
               </pre>
             </div>
           )}

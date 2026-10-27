@@ -1,6 +1,9 @@
-# TurboNex Telegram Community Moderation Bot (Python)
+# TurboNex Telegram Community Moderation Bot (Legacy Python Reference)
 
-A high-performance, secure Telegram moderation bot engineered for the **TurboNex** community. Built with Python 3.10+ and `python-telegram-bot` v20 (async).
+> ⚠️ **Cloudflare Workers Migration Notice**:
+> Cloudflare Workers cannot run Python long-polling processes. The production bot has been rewritten as a native TypeScript Cloudflare Worker located in `src/worker/` using webhook architecture and Cloudflare D1.
+> For the Cloudflare Workers Free deployment guide, please see the root `/README.md` and `wrangler.toml`.
+> This `bot/` folder is preserved as a standalone Python reference for VPS or Render background workers.
 
 ---
 

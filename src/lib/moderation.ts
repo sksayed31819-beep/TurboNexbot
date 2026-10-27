@@ -35,7 +35,7 @@ export const DEFAULT_CONFIG: ModerationConfig = {
   welcomeTemplate: '👋 Welcome {mention} to {group_name}!\n\n⚡ Enjoy your stay!\n📜 Community Rules: {rules_link}\n🚫 No spam, links, or phone numbers allowed from regular members.',
   rulesLink: 'https://t.me/turbonex_rules',
   communityName: 'TurboNex Community',
-  adminIds: [999001, 777123],
+  adminIds: [],
 };
 
 const COMMON_TLDS = [

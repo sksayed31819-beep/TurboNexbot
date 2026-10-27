@@ -57,11 +57,14 @@ test('Anti-Spam Tracker: detects burst flooding and duplicate messages', () => {
   assert.match(dupeRes.reason, /Repeated message detected/);
 });
 
-test('Admin Authorization: Admins bypass moderation filters', () => {
+test('Admin Authorization: Admins bypass moderation filters and DEFAULT_CONFIG has no hardcoded admin IDs', () => {
+  // Confirm no default or hardcoded admin IDs exist
+  assert.equal(DEFAULT_CONFIG.adminIds.length, 0);
+
   const tracker = new SpamTrackerTS();
   const decisionAdmin = evaluateMessageTS(
     'Official announcement: https://turbonex.com/news',
-    999001,
+    123456789,
     true,
     DEFAULT_CONFIG,
     tracker

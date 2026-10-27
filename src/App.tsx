@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Header } from './components/Header';
+import { WebhookManager } from './components/WebhookManager';
 import { ChatSimulator } from './components/ChatSimulator';
 import { ModerationLab } from './components/ModerationLab';
 import { SchedulerView } from './components/SchedulerView';
@@ -9,11 +10,11 @@ import { TestRunnerModal } from './components/TestRunnerModal';
 import { DEFAULT_CONFIG, ModerationConfig, SpamTrackerTS } from './lib/moderation';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('simulator');
+  const [activeTab, setActiveTab] = useState<string>('webhook');
   const [config, setConfig] = useState<ModerationConfig>(DEFAULT_CONFIG);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isRunningTests, setIsRunningTests] = useState(false);
-  const [pythonTestResult, setPythonTestResult] = useState<{
+  const [unitTestResult, setUnitTestResult] = useState<{
     success: boolean;
     output: string;
     durationMs?: number;
@@ -30,16 +31,16 @@ export default function App() {
     )
   );
 
-  const runPythonTests = async () => {
+  const runUnitTests = async () => {
     setIsRunningTests(true);
     try {
-      const res = await fetch('/api/run-python-tests', { method: 'POST' });
-      const data = await res.json();
-      setPythonTestResult(data);
+      const res = await fetch('/api/run-unit-tests', { method: 'POST' });
+      const data = (await res.json()) as any;
+      setUnitTestResult(data);
     } catch (err: any) {
-      setPythonTestResult({
+      setUnitTestResult({
         success: false,
-        output: err.message || 'Failed to reach Python test execution server.',
+        output: err.message || 'Failed to reach unit test execution server.',
       });
     } finally {
       setIsRunningTests(false);
@@ -47,7 +48,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    runPythonTests();
+    runUnitTests();
   }, []);
 
   const handleUpdateConfig = (newConfig: ModerationConfig) => {
@@ -64,12 +65,13 @@ export default function App() {
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        pythonTestPassed={pythonTestResult?.success ?? null}
+        unitTestsPassed={unitTestResult?.success ?? null}
         onRunTests={() => setIsTestModalOpen(true)}
         isRunningTests={isRunningTests}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {activeTab === 'webhook' && <WebhookManager />}
         {activeTab === 'simulator' && (
           <ChatSimulator config={config} spamTracker={spamTrackerRef.current} />
         )}
@@ -82,14 +84,14 @@ export default function App() {
       </main>
 
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        TurboNex Community Moderation Bot • Built with Python 3.10 &amp; Telegram Bot API • Zero-Leak Security Architecture
+        TurboNex Community Moderation Bot • Cloudflare Workers Free Plan Architecture (Edge Webhook &amp; D1 Database)
       </footer>
 
       <TestRunnerModal
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
-        onRunLiveTests={runPythonTests}
-        pythonTestResult={pythonTestResult}
+        onRunLiveTests={runUnitTests}
+        unitTestResult={unitTestResult}
         isRunning={isRunningTests}
       />
     </div>

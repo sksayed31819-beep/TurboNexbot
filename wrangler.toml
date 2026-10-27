@@ -1,0 +1,40 @@
+# TurboNex Telegram Moderation Bot - Cloudflare Workers Configuration
+name = "turbonex-moderation-bot"
+main = "src/worker/index.ts"
+compatibility_date = "2024-11-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Workers Cron Trigger for Channel Post Scheduler (Every 1 minute on Free plan)
+[triggers]
+crons = ["* * * * *"]
+
+# Cloudflare D1 Database Binding for persistent settings, spam tracking, and scheduled posts
+# DEPLOYMENT INSTRUCTION:
+# 1. Run: npx wrangler d1 create turbonex-db
+# 2. Copy the resulting database_id UUID and replace REPLACE_WITH_YOUR_D1_DATABASE_ID below:
+[[d1_databases]]
+binding = "DB"
+database_name = "turbonex-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Static Assets binding for React Dashboard SPA (built into ./dist via npm run build)
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
+
+# Non-sensitive default configuration variables
+[vars]
+COMMUNITY_NAME = "TurboNex Community"
+DEFAULT_VIOLATION_ACTION = "delete_and_warn"
+
+# NOTE ON PRODUCTION SECRETS:
+# Never put real tokens, API keys, or private IDs in this file or commit them to git!
+# Set encrypted secrets securely via Cloudflare Wrangler CLI:
+#   npx wrangler secret put TELEGRAM_BOT_TOKEN      (Bot token from @BotFather)
+#   npx wrangler secret put TELEGRAM_SECRET_TOKEN   (Random string for X-Telegram-Bot-Api-Secret-Token)
+#   npx wrangler secret put ADMIN_API_KEY           (Secret key required for dashboard admin API access)
+#   npx wrangler secret put ADMIN_IDS               (Comma-separated numeric Telegram User IDs)
+#   npx wrangler secret put COMMUNITY_GROUP_ID      (Optional group ID, e.g. -1001234567890)
+#   npx wrangler secret put LINKED_CHANNEL_ID       (Optional channel username or ID, e.g. @turbonex_official)

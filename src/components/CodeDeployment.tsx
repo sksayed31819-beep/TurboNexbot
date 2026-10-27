@@ -12,9 +12,12 @@ import {
   Lock,
   Layers,
   Sparkles,
+  Database,
+  Cloud,
+  Clock,
 } from 'lucide-react';
 
-interface BotFile {
+interface WorkerFile {
   name: string;
   path: string;
   content: string;
@@ -23,22 +26,22 @@ interface BotFile {
 
 export const CodeDeployment: React.FC = () => {
   const [activeSubTab, setActiveSubTab] = useState<'deploy' | 'code' | 'security'>('deploy');
-  const [files, setFiles] = useState<BotFile[]>([]);
-  const [selectedFileName, setSelectedFileName] = useState('bot.py');
+  const [files, setFiles] = useState<WorkerFile[]>([]);
+  const [selectedFileName, setSelectedFileName] = useState('index.ts');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Security interactive masker
   const [sampleToken, setSampleToken] = useState('7182938472:AAElskdfj-XYZ1234567890');
 
   useEffect(() => {
-    fetch('/api/bot-files')
-      .then((res) => res.json())
-      .then((data) => {
+    fetch('/api/worker-files')
+      .then((res) => res.json() as Promise<any>)
+      .then((data: any) => {
         if (data.success && data.files) {
           setFiles(data.files);
         }
       })
-      .catch((err) => console.error('Failed to fetch bot files:', err));
+      .catch((err) => console.error('Failed to fetch worker files:', err));
   }, []);
 
   const handleCopy = (text: string, key: string) => {
@@ -50,7 +53,7 @@ export const CodeDeployment: React.FC = () => {
   const selectedFile = files.find((f) => f.name === selectedFileName) || files[0];
 
   const maskDemoToken = (tok: string) => {
-    if (!tok) return '[NOT SET]';
+    if (!tok) return '[NOT CONFIGURED]';
     const c = tok.trim();
     if (c.length <= 8) return '***REDACTED***';
     return `${c.slice(0, 4)}***${c.slice(-4)}`;
@@ -69,7 +72,7 @@ export const CodeDeployment: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            🚀 Free Hosting Deployment Guide
+            🚀 Cloudflare Workers Free Deployment Guide
           </button>
           <button
             onClick={() => setActiveSubTab('code')}
@@ -79,7 +82,7 @@ export const CodeDeployment: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            📄 Python Codebase Viewer
+            📄 Worker Source Files &amp; D1 Schema
           </button>
           <button
             onClick={() => setActiveSubTab('security')}
@@ -89,21 +92,21 @@ export const CodeDeployment: React.FC = () => {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            🔒 Secrets &amp; Redaction Architecture
+            🔒 Secrets &amp; Cloudflare Free Tier Specs
           </button>
         </div>
       </div>
 
-      {/* TAB 1: FREE HOSTING DEPLOYMENT GUIDE */}
+      {/* TAB 1: CLOUDFLARE WORKERS FREE DEPLOYMENT GUIDE */}
       {activeSubTab === 'deploy' && (
         <div className="space-y-6">
           <div className="p-5 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
             <h3 className="text-base font-bold text-white mb-2 flex items-center gap-2">
-              <Server className="w-5 h-5 text-cyan-400" />
-              Free Hosting on Render.com (Background Worker / Webhook)
+              <Cloud className="w-5 h-5 text-cyan-400" />
+              Complete Step-by-Step Deployment: Cloudflare Workers Free Plan
             </h3>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Render provides a free tier that runs Python background services and web apps with zero hosting costs. Follow this 4-step deployment guide to take your TurboNex moderation bot live.
+              This setup runs 100% on Cloudflare's Free Tier (100,000 requests/day, 5,000,000 D1 reads/day, Cron Triggers). Zero persistent server or VPS required.
             </p>
           </div>
 
@@ -114,26 +117,21 @@ export const CodeDeployment: React.FC = () => {
                 <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
                   1
                 </span>
-                <h4 className="font-semibold text-white text-sm">Create Bot &amp; Admin Rights</h4>
+                <h4 className="font-semibold text-white text-sm">BotFather &amp; Telegram Permissions</h4>
               </div>
               <ul className="text-xs text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
                 <li>
-                  Open Telegram and message{' '}
-                  <span className="text-cyan-400 font-mono font-semibold">@BotFather</span>.
+                  Message <span className="text-cyan-400 font-mono font-semibold">@BotFather</span> &rarr; send <code>/newbot</code>.
                 </li>
-                <li>Send `/newbot`, choose a name (`TurboNex Moderation Bot`) and username.</li>
+                <li>Save the provided Bot Token (keep it secret!).</li>
                 <li>
-                  Copy your HTTP API Token (e.g. `7182938472:AAElskdfj...`).{' '}
-                  <strong className="text-amber-300">Keep this secret!</strong>
+                  <strong>Disable Privacy Mode:</strong> Send <code>/setprivacy</code> &rarr; choose your bot &rarr; select <strong className="text-emerald-400">Disable</strong> (required to see group messages).
                 </li>
                 <li>
-                  Add the bot to your Telegram group and promote it to <strong>Admin</strong> with{' '}
-                  <span className="text-emerald-400 font-medium">Delete Messages</span> and{' '}
-                  <span className="text-emerald-400 font-medium">Ban/Restrict Users</span> rights.
+                  Add the bot to your community group and promote to <strong>Admin</strong> with <span className="text-cyan-300 font-medium">Delete messages</span> and <span className="text-cyan-300 font-medium">Ban users</span> permissions.
                 </li>
                 <li>
-                  Message <span className="text-cyan-400 font-mono">@userinfobot</span> to find your
-                  numeric Telegram User ID.
+                  Add the bot to your channel and promote to <strong>Admin</strong> with <span className="text-cyan-300 font-medium">Post messages</span> permission.
                 </li>
               </ul>
             </div>
@@ -144,37 +142,20 @@ export const CodeDeployment: React.FC = () => {
                 <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
                   2
                 </span>
-                <h4 className="font-semibold text-white text-sm">Setup Render Free Service</h4>
+                <h4 className="font-semibold text-white text-sm">Create Cloudflare D1 Database</h4>
               </div>
-              <ul className="text-xs text-slate-300 space-y-2 list-disc list-inside leading-relaxed">
-                <li>
-                  Create a free account at{' '}
-                  <a
-                    href="https://render.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-cyan-400 hover:underline inline-flex items-center gap-0.5"
-                  >
-                    Render.com <ExternalLink className="w-3 h-3" />
-                  </a>
-                </li>
-                <li>
-                  Click <strong>New +</strong> &rarr; <strong>Background Worker</strong> (or Web Service).
-                </li>
-                <li>Connect your repository containing this `bot/` folder.</li>
-                <li>
-                  Set <strong>Build Command</strong>:
-                  <div className="bg-slate-950 p-1.5 rounded font-mono text-[11px] text-cyan-300 border border-slate-800 my-1">
-                    pip install -r bot/requirements.txt
-                  </div>
-                </li>
-                <li>
-                  Set <strong>Start Command</strong>:
-                  <div className="bg-slate-950 p-1.5 rounded font-mono text-[11px] text-cyan-300 border border-slate-800 my-1">
-                    python -u bot/bot.py
-                  </div>
-                </li>
-              </ul>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Log into Cloudflare and create your serverless SQLite D1 database:
+              </p>
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300 space-y-2">
+                <div className="text-slate-400"># Log into Cloudflare</div>
+                <div>npx wrangler login</div>
+                <div className="text-slate-400 pt-1"># Create D1 database for settings &amp; scheduler</div>
+                <div>npx wrangler d1 create turbonex-db</div>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Copy the output <code>database_id</code> into your <code>wrangler.toml</code> file under <code>database_id</code>.
+              </p>
             </div>
 
             {/* Step 3 */}
@@ -183,19 +164,17 @@ export const CodeDeployment: React.FC = () => {
                 <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
                   3
                 </span>
-                <h4 className="font-semibold text-white text-sm">Configure Environment Secrets</h4>
+                <h4 className="font-semibold text-white text-sm">Execute Database Migrations</h4>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                In Render's <strong>Environment Variables</strong> tab, add these keys:
+                Apply the initial schema to your remote Cloudflare D1 database:
               </p>
-              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-xs space-y-1 text-slate-300">
-                <div><span className="text-cyan-400">TELEGRAM_BOT_TOKEN</span>=your_botfather_token</div>
-                <div><span className="text-cyan-400">ADMIN_IDS</span>=987654321,123456789</div>
-                <div><span className="text-cyan-400">CHANNEL_ID</span>=@turbonex_official</div>
-                <div><span className="text-cyan-400">DELETE_URLS</span>=true</div>
-                <div><span className="text-cyan-400">DELETE_PHONE_NUMBERS</span>=true</div>
-                <div><span className="text-cyan-400">ANTI_SPAM_ENABLED</span>=true</div>
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300 space-y-1">
+                <div>npx wrangler d1 execute turbonex-db --remote --file=migrations/0001_init.sql</div>
               </div>
+              <p className="text-[11px] text-slate-400">
+                This creates the tables for settings, scheduled channel posts, spam tracking, and moderation audit logs.
+              </p>
             </div>
 
             {/* Step 4 */}
@@ -204,31 +183,76 @@ export const CodeDeployment: React.FC = () => {
                 <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
                   4
                 </span>
-                <h4 className="font-semibold text-white text-sm">Deploy &amp; Monitor Logs</h4>
+                <h4 className="font-semibold text-white text-sm">Configure Encrypted Cloudflare Secrets</h4>
               </div>
               <p className="text-xs text-slate-400 leading-relaxed">
-                Click <strong>Deploy</strong>. Render will install dependencies and start polling.
+                Set environment secrets securely in Cloudflare (never commit these to git):
               </p>
-              <div className="bg-slate-950 p-2 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1">
-                <div>[INFO] TurboNexBot: Bot token verified (loaded securely as 7182***2345)</div>
-                <div>[INFO] TurboNexBot: Admin count: 1 authorized administrators</div>
-                <div>[INFO] TurboNexBot: Started successfully in polling mode.</div>
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-[11px] text-cyan-300 space-y-1">
+                <div>npx wrangler secret put TELEGRAM_BOT_TOKEN</div>
+                <div>npx wrangler secret put TELEGRAM_SECRET_TOKEN</div>
+                <div>npx wrangler secret put ADMIN_API_KEY</div>
+                <div>npx wrangler secret put ADMIN_IDS</div>
+                <div>npx wrangler secret put LINKED_CHANNEL_ID</div>
               </div>
               <p className="text-[11px] text-slate-400">
-                Notice that token secrets are automatically masked even in startup logs.
+                <code>TELEGRAM_SECRET_TOKEN</code> authenticates Telegram webhooks, while <code>ADMIN_API_KEY</code> authenticates dashboard management APIs.
+              </p>
+            </div>
+
+            {/* Step 5 */}
+            <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
+                  5
+                </span>
+                <h4 className="font-semibold text-white text-sm">Build SPA &amp; Deploy Worker to Cloudflare Edge</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Compile the frontend dashboard assets and deploy Worker + Static Assets:
+              </p>
+              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-cyan-300 space-y-1">
+                <div className="text-slate-400"># 1. Compile React SPA into ./dist</div>
+                <div>npm run build</div>
+                <div className="text-slate-400 pt-1"># 2. Deploy Worker and Static Assets</div>
+                <div>npx wrangler deploy</div>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Wrangler will output your live URL: <code>https://turbonex-moderation-bot.&lt;subdomain&gt;.workers.dev</code>
+              </p>
+            </div>
+
+            {/* Step 6 */}
+            <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
+              <div className="flex items-center space-x-2">
+                <span className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 font-mono text-xs flex items-center justify-center font-bold">
+                  6
+                </span>
+                <h4 className="font-semibold text-white text-sm">Register Telegram Webhook</h4>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Register your Cloudflare Worker URL with Telegram with your secret token:
+              </p>
+              <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 break-all space-y-1">
+                <div>curl -F "url=https://your-worker.workers.dev/webhook" \</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-F "secret_token=YOUR_TELEGRAM_SECRET_TOKEN" \</div>
+                <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;https://api.telegram.org/botYOUR_BOT_TOKEN/setWebhook</div>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Or simply paste your worker URL in the <strong>Webhook Gateway</strong> tab of this dashboard!
               </p>
             </div>
           </div>
         </div>
       )}
 
-      {/* TAB 2: PYTHON CODEBASE EXPLORER */}
+      {/* TAB 2: WORKER SOURCE CODE EXPLORER */}
       {activeSubTab === 'code' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* File List */}
           <div className="lg:col-span-4 space-y-2">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
-              Bot Source Files ({files.length})
+              Cloudflare Worker Files ({files.length})
             </h4>
             <div className="space-y-1 bg-slate-900 p-2 rounded-2xl border border-slate-800">
               {files.map((file) => (
@@ -256,7 +280,7 @@ export const CodeDeployment: React.FC = () => {
             <div className="px-4 py-2.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center space-x-2 font-mono text-xs text-slate-300">
                 <Code className="w-4 h-4 text-cyan-400" />
-                <span>bot/{selectedFile ? selectedFile.name : ''}</span>
+                <span>{selectedFile ? selectedFile.path : ''}</span>
               </div>
               {selectedFile && (
                 <button
@@ -293,10 +317,10 @@ export const CodeDeployment: React.FC = () => {
           <div className="p-5 sm:p-6 bg-slate-900 border border-slate-800 rounded-2xl shadow-xl">
             <div className="flex items-center space-x-2 text-emerald-400 font-semibold mb-2">
               <ShieldCheck className="w-5 h-5" />
-              <span>Zero-Leak Token &amp; Personal Data Redaction Architecture</span>
+              <span>Cloudflare Workers Free Plan Architecture &amp; Zero-Leak Security</span>
             </div>
             <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              TurboNex applies defensive logging and variable isolation at every layer. The bot never logs raw tokens or raw telephone numbers, eliminating token exposure in production monitoring.
+              Cloudflare Workers runs on an edge isolate runtime. Secrets are injected at runtime via environment bindings (<code className="text-cyan-300">env.TELEGRAM_BOT_TOKEN</code>), never exposed in client bundles or public repositories.
             </p>
           </div>
 
@@ -326,35 +350,35 @@ export const CodeDeployment: React.FC = () => {
               </div>
             </div>
 
-            {/* Checklist */}
+            {/* Cloudflare Free Tier Specifications */}
             <div className="p-5 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
               <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" />
-                Security Verification Checklist
+                <Cloud className="w-4 h-4 text-cyan-400" />
+                Cloudflare Free Tier Capacity
               </h4>
               <ul className="text-xs text-slate-300 space-y-2.5">
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Environment-Only Secrets:</strong> `TELEGRAM_BOT_TOKEN` is loaded strictly via `os.getenv` without hardcoded fallbacks.
+                    <strong>100,000 Inbound Requests / Day:</strong> More than enough for high-traffic active Telegram communities.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Phone Privacy Masking:</strong> User phone numbers are masked (`+1 (555) ***-**78`) before recording moderation audit events.
+                    <strong>5 Million D1 Database Reads / Day:</strong> Fast persistent storage for settings, anti-spam logs, and scheduled posts.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Strict Admin Guard:</strong> Non-admin users cannot execute `/settings`, `/toggle_links`, `/toggle_phones`, or `/schedule`.
+                    <strong>Cron Triggers (1-minute resolution):</strong> Cloudflare Free plan allows crons running every minute (<code>* * * * *</code>), ideal for checking pending channel posts.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                   <span>
-                    <strong>Clean Git Tracking:</strong> `.env` is listed in `.gitignore` so secrets are never pushed to GitHub repositories.
+                    <strong>Zero Cold Starts:</strong> Workers V8 isolates start in under 5 milliseconds across global edge locations.
                   </span>
                 </li>
               </ul>

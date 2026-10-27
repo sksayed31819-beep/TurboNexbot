@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Lock,
   Unlock,
@@ -12,6 +12,7 @@ import {
   Key,
 } from 'lucide-react';
 import { ModerationConfig, formatWelcomeMessageTS, maskSecretTS } from '../lib/moderation';
+import { getAdminApiKey, setAdminApiKey, fetchWithAdminAuth } from '../lib/adminAuth';
 
 interface AdminSettingsProps {
   config: ModerationConfig;
@@ -19,30 +20,82 @@ interface AdminSettingsProps {
 }
 
 export const AdminSettings: React.FC<AdminSettingsProps> = ({ config, onUpdateConfig }) => {
-  const [adminAuthInput, setAdminAuthInput] = useState('999001');
-  const [isUnlocked, setIsUnlocked] = useState(true);
+  const [apiKeyInput, setApiKeyInput] = useState(getAdminApiKey());
+  const [isUnlocked, setIsUnlocked] = useState(Boolean(getAdminApiKey()));
   const [authError, setAuthError] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Local copy of config
   const [localConfig, setLocalConfig] = useState<ModerationConfig>({ ...config });
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const numericId = parseInt(adminAuthInput.trim(), 10);
-    if (config.adminIds.includes(numericId)) {
-      setIsUnlocked(true);
-      setAuthError('');
-    } else {
-      setAuthError(`Telegram User ID ${adminAuthInput} is not in the authorized ADMIN_IDS whitelist.`);
-      setIsUnlocked(false);
+  const loadSettings = async () => {
+    setAuthError('');
+    try {
+      const res = await fetchWithAdminAuth('/api/settings');
+      if (res.status === 401) {
+        setIsUnlocked(false);
+        setAuthError('Authentication Required: Please enter your ADMIN_API_KEY to access and edit settings.');
+        return;
+      }
+      const data = (await res.json()) as any;
+      if (data.success && data.settings) {
+        setLocalConfig(data.settings);
+        onUpdateConfig(data.settings);
+        setIsUnlocked(true);
+      } else {
+        setAuthError(data.error || 'Failed to load settings.');
+      }
+    } catch (err: any) {
+      setAuthError(err.message || 'Network error fetching settings.');
     }
   };
 
-  const handleSave = () => {
-    onUpdateConfig(localConfig);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2500);
+  useEffect(() => {
+    if (getAdminApiKey()) {
+      loadSettings();
+    }
+  }, []);
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanKey = apiKeyInput.trim();
+    if (!cleanKey) {
+      setAuthError('Please enter your configured ADMIN_API_KEY.');
+      setIsUnlocked(false);
+      return;
+    }
+    setAdminApiKey(cleanKey);
+    loadSettings();
+  };
+
+  const handleSave = async () => {
+    setSaveError(null);
+    setSaveSuccess(false);
+    try {
+      const res = await fetchWithAdminAuth('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(localConfig),
+      });
+
+      if (res.status === 401) {
+        setIsUnlocked(false);
+        setSaveError('Unauthorized: Invalid or missing ADMIN_API_KEY. Please authenticate above.');
+        return;
+      }
+
+      const data = (await res.json()) as any;
+      if (data.success) {
+        onUpdateConfig(localConfig);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2500);
+      } else {
+        setSaveError(data.error || 'Failed to save settings.');
+      }
+    } catch (err: any) {
+      setSaveError(err.message || 'Network failure while saving settings.');
+    }
   };
 
   const welcomePreview = formatWelcomeMessageTS(
@@ -70,32 +123,32 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ config, onUpdateCo
           </div>
           <div>
             <h3 className="font-semibold text-white text-base">
-              {isUnlocked ? 'Admin Authorization: Verified' : 'Admin Security Gate Locked'}
+              {isUnlocked ? 'Admin Authorization: Authenticated' : 'Admin Security Gate: Key Required'}
             </h3>
             <p className="text-xs text-slate-400">
-              Only verified Telegram Administrator IDs from `ADMIN_IDS` can update moderation policies.
+              Administrative APIs require a valid <code className="text-cyan-300 font-mono">ADMIN_API_KEY</code>.
             </p>
           </div>
         </div>
 
-        {/* Auth ID check */}
+        {/* Auth Key Input */}
         <form onSubmit={handleAuthSubmit} className="flex items-center space-x-2 w-full md:w-auto">
-          <div className="relative flex-1 md:w-48">
+          <div className="relative flex-1 md:w-56">
             <span className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-500 text-xs">
-              ID:
+              <Key className="w-3.5 h-3.5" />
             </span>
             <input
-              type="text"
-              value={adminAuthInput}
-              onChange={(e) => setAdminAuthInput(e.target.value)}
-              placeholder="e.g. 999001"
-              aria-label="Admin Telegram User ID"
+              type="password"
+              value={apiKeyInput}
+              onChange={(e) => setApiKeyInput(e.target.value)}
+              placeholder="Enter ADMIN_API_KEY"
+              aria-label="Admin API Key"
               className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 font-mono"
             />
           </div>
           <button
             type="submit"
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-medium border border-slate-700 transition-colors"
+            className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-medium transition-colors"
           >
             Authenticate
           </button>
@@ -103,9 +156,16 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ config, onUpdateCo
       </div>
 
       {authError && (
+        <div className="p-3 bg-amber-950/40 border border-amber-800/60 rounded-xl text-amber-300 text-xs flex items-center space-x-2">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>{authError}</span>
+        </div>
+      )}
+
+      {saveError && (
         <div className="p-3 bg-rose-950/40 border border-rose-800/60 rounded-xl text-rose-300 text-xs flex items-center space-x-2">
           <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{authError}</span>
+          <span>{saveError}</span>
         </div>
       )}
 
@@ -120,7 +180,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ config, onUpdateCo
                 Automated Moderation Toggles
               </h4>
               <span className="text-[10px] font-mono px-2 py-0.5 bg-cyan-500/10 text-cyan-300 rounded border border-cyan-500/20">
-                Live Synced
+                Cloudflare D1 Synced
               </span>
             </div>
 
@@ -313,7 +373,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({ config, onUpdateCo
               {saveSuccess && (
                 <span className="text-xs text-emerald-400 font-medium flex items-center gap-1 animate-in fade-in">
                   <Check className="w-4 h-4" />
-                  Settings applied!
+                  Settings saved to backend!
                 </span>
               )}
             </div>
