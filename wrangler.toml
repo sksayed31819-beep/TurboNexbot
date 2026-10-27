@@ -15,7 +15,7 @@ crons = ["* * * * *"]
 [[d1_databases]]
 binding = "DB"
 database_name = "turbonex-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "93ae0b49-7741-45ae-9889-f4eff13e6f55"
 
 # Static Assets binding for React Dashboard SPA (built into ./dist via npm run build)
 [assets]
