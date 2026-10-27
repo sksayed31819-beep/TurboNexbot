@@ -1,0 +1,25 @@
+services:
+  - type: worker
+    name: turbonex-telegram-bot
+    runtime: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r bot/requirements.txt
+    startCommand: python -u bot/bot.py
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false # Must be entered securely in Render Environment Secrets UI
+      - key: ADMIN_IDS
+        sync: false # Comma-separated admin Telegram IDs
+      - key: CHANNEL_ID
+        sync: false # Linked Telegram channel username or ID (e.g. @turbonex_channel)
+      - key: DELETE_URLS
+        value: "true"
+      - key: DELETE_PHONE_NUMBERS
+        value: "true"
+      - key: ANTI_SPAM_ENABLED
+        value: "true"
+      - key: BURST_LIMIT
+        value: "5"
+      - key: VIOLATION_ACTION
+        value: "delete_and_warn"

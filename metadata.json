@@ -1,0 +1,6 @@
+{
+  "name": "TurboNex Telegram Moderation Bot",
+  "description": "Secure Python community moderation bot for TurboNex with automated link deletion, phone number filtering, anti-spam protection, welcome messages, and channel post scheduling.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

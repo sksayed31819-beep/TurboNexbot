@@ -1,0 +1,5 @@
+# TurboNex Telegram Moderation Bot - Production Dependencies
+python-telegram-bot[rate-limiter]>=20.8,<22.0
+python-dotenv>=1.0.1
+pytz>=2024.1
+aiohttp>=3.9.5
